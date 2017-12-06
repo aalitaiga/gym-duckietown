@@ -12,10 +12,11 @@ import visdom
 import matplotlib.pyplot as plt
 # plt.ion()
 import seaborn as sns; sns.set()
-
 from pycolab import ascii_art
 from pycolab import human_ui
 from pycolab.prefab_parts import sprites as prefab_sprites
+
+from gym_duckietown.envs import cleaner_map
 
 
 action_orientation = {
@@ -45,15 +46,16 @@ GAME_ART = ['#############',
 def make_game():
     """Builds and returns a four-rooms game."""
     return ascii_art.ascii_art_to_game(
-        GAME_ART, what_lies_beneath=' ',
+        cleaner_map(), what_lies_beneath=' ',
         sprites={'P': PlayerSprite})
 
 
 class DuckietownGrid(gym.Env):
 
-    def __init__(self):
+    def __init__(self, size=10):
+        map_art = cleaner_map(size)
         self.game = ascii_art.ascii_art_to_game(
-            GAME_ART, what_lies_beneath=' ',
+            map_art, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
         )
         self.action_space = spaces.Discrete(5)
@@ -67,7 +69,7 @@ class DuckietownGrid(gym.Env):
         return np.array(sprite_position), reward, self.game.game_over, ""
 
     def _reset(self):
-        # Find clearner way to reset the end, for now just recreate it
+        # Find cleaner way to reset the end, for now just recreate it
         self.game = ascii_art.ascii_art_to_game(
             GAME_ART, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
@@ -123,6 +125,7 @@ class PlayerSprite(prefab_sprites.MazeWalker):
             self.orientation = action_orientation[actions]
         elif actions == 4:
             # TODO: add penalty for illegal moves
+            # Add reward for discovering new states
             # Return None if fine, else return blocking object
             if self.orientation == self._NORTH:
                 self._north(board, the_plot)

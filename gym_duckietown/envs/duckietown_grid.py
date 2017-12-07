@@ -11,12 +11,12 @@ import numpy as np
 import visdom
 import matplotlib.pyplot as plt
 # plt.ion()
-import seaborn as sns; sns.set()
+# import seaborn as sns; sns.set()
 from pycolab import ascii_art
 from pycolab import human_ui
 from pycolab.prefab_parts import sprites as prefab_sprites
 
-from gym_duckietown.envs import cleaner_map
+from gym_duckietown.envs import generate_map
 
 
 action_orientation = {
@@ -46,14 +46,14 @@ GAME_ART = ['#############',
 def make_game():
     """Builds and returns a four-rooms game."""
     return ascii_art.ascii_art_to_game(
-        cleaner_map(), what_lies_beneath=' ',
+        generate_map(), what_lies_beneath=' ',
         sprites={'P': PlayerSprite})
 
 
 class DuckietownGrid(gym.Env):
 
     def __init__(self, size=10):
-        map_art = cleaner_map(size)
+        map_art = generate_map(size)
         self.game = ascii_art.ascii_art_to_game(
             map_art, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
@@ -64,6 +64,7 @@ class DuckietownGrid(gym.Env):
 
     def _step(self, action):
         # Use the sprite position insteas of the whole board as an observation
+        # self.game._sprites_and_drapes['P'].
         _, reward, _ = self.game.play(action)
         sprite_position = self.game._sprites_and_drapes['P'].virtual_position
         return np.array(sprite_position), reward, self.game.game_over, ""
@@ -90,7 +91,7 @@ class PlayerSprite(prefab_sprites.MazeWalker):
     reward of 1 and the epsiode terminates.
     """
 
-    def __init__(self, corner, position, character, plot=True):
+    def __init__(self, corner, position, character, plot=False):
         """Inform superclass that we can't walk through walls."""
         super(PlayerSprite, self).__init__(
             corner, position, character, impassable='#')
@@ -112,10 +113,13 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         self.memory = np.array(memory)
         # n, m = selfmemory.shape
 
-    def _update_memory(self):
+    def _update_memory(self, the_plot=None):
         window = np.multiply.outer(self.orientation[::-1], self.mask).T + self.position + self.orientation
         u, v = window.T
+        before = self.memory[u, v].sum()
         self.memory[u, v] = 1
+        after = self.memory[u, v].sum()
+        the_plot.add_reward((after - before)/(3*5))
 
     def update(self, actions, board, layers, backdrop, things, the_plot):
         del layers, backdrop, things   # Unused.
@@ -124,23 +128,26 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         if actions in [0, 1, 2, 3]:    # walk upward?
             self.orientation = action_orientation[actions]
         elif actions == 4:
-            # TODO: add penalty for illegal moves
-            # Add reward for discovering new states
-            # Return None if fine, else return blocking object
             if self.orientation == self._NORTH:
-                self._north(board, the_plot)
+                out = self._north(board, the_plot)
             elif self.orientation == self._SOUTH:
-                self._south(board, the_plot)
+                out = self._south(board, the_plot)
             elif self.orientation == self._EAST:  # walk downward?
-                self._east(board, the_plot)
+                out = self._east(board, the_plot)
             elif self.orientation == self._WEST:  # walk leftward?
-                self._west(board, the_plot)
+                out = self._west(board, the_plot)
 
-        self._update_memory()
+            if out is not None:
+                the_plot.add_reward(-0.96)
+
+        # Penalty for each step taken
+        the_plot.add_reward(-0.04)
+
+        self._update_memory(the_plot)
 
         # See if we've explored the map
         if np.all(self.memory == 1):
-            the_plot.add_reward(1.0)
+            the_plot.add_reward(10.0)
             the_plot.terminate_episode()
 
         if self.win is not None:

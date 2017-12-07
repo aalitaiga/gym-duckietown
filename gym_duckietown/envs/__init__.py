@@ -1,2 +1,2 @@
-from gym_duckietown.envs.generate_map import cleaner_map
+from gym_duckietown.envs.generate_map import generate_map
 from gym_duckietown.envs.duckietown_grid import DuckietownGrid

@@ -43,10 +43,9 @@ def basic_map(size=10):
     rows = np.random.choice(range(1,size+1), 5)
     map_[rows, 9] = 1
 
-    # import ipdb; ipdb.set_trace()
     return map_
 
-def cleaner_map(size=10):
+def generate_map(size=10):
     map_ = np.zeros([size+1, size+1])
     map_[0,:] = 1
     map_[-1,:] = 1

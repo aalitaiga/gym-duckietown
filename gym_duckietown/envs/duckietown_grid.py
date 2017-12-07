@@ -2,19 +2,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
+
 import curses
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-import sys
 import numpy as np
-import visdom
 import matplotlib.pyplot as plt
-# plt.ion()
-# import seaborn as sns; sns.set()
 from pycolab import ascii_art
 from pycolab import human_ui
 from pycolab.prefab_parts import sprites as prefab_sprites
+import visdom
 
 from gym_duckietown.envs import generate_map
 
@@ -40,8 +39,6 @@ GAME_ART = ['#############',
             '# P   #     #',
             '#############']
 
-# Rewrite the engine function and replace engine.play by engine.step
-
 
 def make_game():
     """Builds and returns a four-rooms game."""
@@ -59,12 +56,10 @@ class DuckietownGrid(gym.Env):
             sprites={'P': PlayerSprite}
         )
         self.action_space = spaces.Discrete(5)
-        # self.observation_space = spaces.Box(low=0, high=255, shape=(screen_height, screen_width, 3))
-        # self.observation_space 
+        self.observation_space = spaces.Box(low=0, high=size-1, shape=(1,1))
 
     def _step(self, action):
         # Use the sprite position insteas of the whole board as an observation
-        # self.game._sprites_and_drapes['P'].
         _, reward, _ = self.game.play(action)
         sprite_position = self.game._sprites_and_drapes['P'].virtual_position
         return np.array(sprite_position), reward, self.game.game_over, ""
@@ -99,9 +94,9 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         self._create_memory()
         self.memory[position] = 1
         self.mask = np.array([-1, 0, 1])
-        self.fig, self.ax = plt.subplots()
 
         if plot:
+            self.fig, self.ax = plt.subplots()
             self.vis = visdom.Visdom()
             self.win = self.vis.heatmap(self.memory)
         else:

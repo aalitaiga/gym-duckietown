@@ -8,5 +8,5 @@ because grid world should also duckies
 on the shell:
 
     git clone https://github.com/aalitaiga/gym-duckietown.git
-    cd duckietown_grid
+    cd gym-duckitown
     pip install -e .

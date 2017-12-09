@@ -15,7 +15,7 @@ from pycolab import human_ui
 from pycolab.prefab_parts import sprites as prefab_sprites
 import visdom
 
-from gym_duckietown.envs import generate_map
+from gym_duckietown.envs.generate_map import generate_map
 
 
 action_orientation = {
@@ -50,7 +50,9 @@ def make_game():
 class DuckietownGrid(gym.Env):
 
     def __init__(self, size=10):
+        self.size = size
         map_art = generate_map(size)
+        PlayerSprite._GAME_ART = map_art
         self.game = ascii_art.ascii_art_to_game(
             map_art, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
@@ -66,8 +68,10 @@ class DuckietownGrid(gym.Env):
 
     def _reset(self):
         # Find cleaner way to reset the end, for now just recreate it
+        map_art = generate_map(self.size)
+        PlayerSprite._GAME_ART = map_art
         self.game = ascii_art.ascii_art_to_game(
-            GAME_ART, what_lies_beneath=' ',
+            map_art, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
         )
         observation, reward, _ = self.game.its_showtime()
@@ -85,6 +89,7 @@ class PlayerSprite(prefab_sprites.MazeWalker):
     reach a magical location (in this example, (4, 3)), the agent receives a
     reward of 1 and the epsiode terminates.
     """
+    _GAME_ART = GAME_ART
 
     def __init__(self, corner, position, character, plot=False):
         """Inform superclass that we can't walk through walls."""
@@ -103,8 +108,9 @@ class PlayerSprite(prefab_sprites.MazeWalker):
             self.win = None
 
     def _create_memory(self):
-        memory = [list(line.replace('#', '1').replace(' ', '0').replace('P', '1')) for line in GAME_ART]
-        memory = [map(int, line) for line in memory]
+        memory = [list(line.replace('#', '1').replace(' ', '0').replace('P', '1')) for line in PlayerSprite._GAME_ART]
+        memory = [list(map(int, line)) for line in memory]
+
         self.memory = np.array(memory)
         # n, m = selfmemory.shape
 

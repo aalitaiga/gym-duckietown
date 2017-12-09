@@ -53,7 +53,7 @@ def generate_map(size=10):
     map_[:,-1] = 1
 
     previous = -1
-    rows_to_modify = range(1,size)
+    rows_to_modify = list(range(1,size))
     del rows_to_modify[size//3]
     # TODO: more interesting maps if commented but occassionaly non feasable
     # let's call them "noise" for now...@
@@ -91,6 +91,6 @@ def convert(row):
     return ''.join(l)
 
 if __name__ == '__main__':
-    map = cleaner_map()
+    map = generate_map()
     for row in map:
         print(row)

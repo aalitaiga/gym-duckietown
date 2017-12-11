@@ -58,7 +58,7 @@ class DuckietownGrid(gym.Env):
             sprites={'P': PlayerSprite}
         )
         self.action_space = spaces.Discrete(5)
-        self.observation_space = spaces.Box(low=0, high=size-1, shape=(1,1))
+        self.observation_space = spaces.Box(low=0, high=size-1, shape=2)
 
     def _step(self, action):
         # Use the sprite position insteas of the whole board as an observation
@@ -75,7 +75,9 @@ class DuckietownGrid(gym.Env):
             sprites={'P': PlayerSprite}
         )
         observation, reward, _ = self.game.its_showtime()
-        return observation
+        sprite_position = self.game._sprites_and_drapes['P'].virtual_position
+
+        return np.array(sprite_position)
 
     def _render(self, mode="human", close=False):
         # raise NotImplementedError

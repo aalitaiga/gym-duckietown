@@ -57,7 +57,7 @@ class DuckietownGrid(gym.Env):
             map_art, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
         )
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=0, high=size-1, shape=2)
 
     def _step(self, action):
@@ -74,20 +74,9 @@ class DuckietownGrid(gym.Env):
             map_art, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
         )
-<<<<<<< HEAD
         _, reward, _ = self.game.its_showtime()
         observation = self.game._sprites_and_drapes['P'].get_observation()
         return observation
-=======
-        observation, reward, _ = self.game.its_showtime()
-        #print('******observation************observation******************')
-        #print(observation)
-        #print('REWARD_REWARD_REEWARD_REWARD_REWARD_REWARD_REWARD_REWARD')
-        #print(reward)
-        sprite_position = self.game._sprites_and_drapes['P'].virtual_position
-
-        return np.array(sprite_position)
->>>>>>> 01779e21ff140fa21406ca6d5a5caad6db41ae43
 
     def _render(self, mode="human", close=False):
         # raise NotImplementedError
@@ -140,30 +129,26 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         after = self.memory[u, v].sum()
         #the_plot.add_reward((after - before)/(3*5))
         the_plot.add_reward(after-before)
-        #print('****memory**************memory************memory***********memory********')
-        #print(self.memory)
 
     def get_observation(self):
         window = np.multiply.outer(self.orientation[::-1], self.mask).T + self.position + self.orientation
         u, v = window.T
-        # import ipdb; ipdb.set_trace()
         return self.art[u, v]
 
     def update(self, actions, board, layers, backdrop, things, the_plot):
         del layers, backdrop, things   # Unused.
 
         # Apply motion commands.
-        if actions in [0, 1, 2, 3]:    # walk upward?
-            self.orientation = action_orientation[actions]
-        elif actions == 4:
-            if self.orientation == self._NORTH:
-                out = self._north(board, the_plot)
-            elif self.orientation == self._SOUTH:
-                out = self._south(board, the_plot)
-            elif self.orientation == self._WEST:  # walk downward?
-                out = self._west(board, the_plot)
-            elif self.orientation == self._EAST:  # walk leftward?
-                out = self._east(board, the_plot)
+        if actions is not None and self.orientation != action_orientation[actions] :
+            self.orientation = action_orientation[actions]      
+        elif actions == 0:
+            out = self._north(board, the_plot)
+        elif actions == 1:
+            out = self._south(board, the_plot)
+        elif actions == 2:
+            out = self._west(board, the_plot)
+        elif actions == 3:
+            out = self._east(board, the_plot)
 
             if out is not None:
                 the_plot.add_reward(-0.96)
@@ -191,7 +176,7 @@ def main(argv=()):
     # Make a CursesUi to play it with.
     ui = human_ui.CursesUi(
         keys_to_actions={curses.KEY_UP: 0, curses.KEY_DOWN: 1,
-                curses.KEY_LEFT: 2, curses.KEY_RIGHT: 3, 'f': 4,
+                curses.KEY_LEFT: 2, curses.KEY_RIGHT: 3,
                 -1: 5},
         delay=200)
 

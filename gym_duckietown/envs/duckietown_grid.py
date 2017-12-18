@@ -139,7 +139,7 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         del layers, backdrop, things   # Unused.
 
         # Apply motion commands.
-        if actions is not None and self.orientation != action_orientation[actions] :
+        if actions is not None and actions < 4 and self.orientation != action_orientation[actions]:
             self.orientation = action_orientation[actions]      
         elif actions == 0:
             out = self._north(board, the_plot)

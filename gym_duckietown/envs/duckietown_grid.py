@@ -58,13 +58,13 @@ class DuckietownGrid(gym.Env):
             sprites={'P': PlayerSprite}
         )
         self.action_space = spaces.Discrete(5)
-        self.observation_space = spaces.Box(low=0, high=size-1, shape=(1,1))
+        self.observation_space = spaces.Box(low=0, high=size-1, shape=2)
 
     def _step(self, action):
         # Use the sprite position insteas of the whole board as an observation
         _, reward, _ = self.game.play(action)
-        sprite_position = self.game._sprites_and_drapes['P'].virtual_position
-        return np.array(sprite_position), reward, self.game.game_over, ""
+        observation = self.game._sprites_and_drapes['P'].get_observation()
+        return np.array(observation), reward, self.game.game_over, ""
 
     def _reset(self):
         # Find cleaner way to reset the end, for now just recreate it
@@ -74,7 +74,8 @@ class DuckietownGrid(gym.Env):
             map_art, what_lies_beneath=' ',
             sprites={'P': PlayerSprite}
         )
-        observation, reward, _ = self.game.its_showtime()
+        _, reward, _ = self.game.its_showtime()
+        observation = self.game._sprites_and_drapes['P'].get_observation()
         return observation
 
     def _render(self, mode="human", close=False):
@@ -97,6 +98,7 @@ class PlayerSprite(prefab_sprites.MazeWalker):
             corner, position, character, impassable='#')
         self.orientation = self._NORTH
         self._create_memory()
+        self.create_art()
         self.memory[position] = 1
         self.mask = np.array([-1, 0, 1])
 
@@ -106,6 +108,11 @@ class PlayerSprite(prefab_sprites.MazeWalker):
             self.win = self.vis.heatmap(self.memory)
         else:
             self.win = None
+
+    def create_art(self):
+        art = [list(line.replace('#', '1').replace(' ', '0').replace('P', '1')) for line in PlayerSprite._GAME_ART]
+        art = [list(map(int, line)) for line in art]
+        self.art = np.array(art)
 
     def _create_memory(self):
         memory = [list(line.replace('#', '1').replace(' ', '0').replace('P', '1')) for line in PlayerSprite._GAME_ART]
@@ -121,6 +128,12 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         self.memory[u, v] = 1
         after = self.memory[u, v].sum()
         the_plot.add_reward((after - before)/(3*5))
+
+    def get_observation(self):
+        window = np.multiply.outer(self.orientation[::-1], self.mask).T + self.position + self.orientation
+        u, v = window.T
+        # import ipdb; ipdb.set_trace()
+        return self.art[u, v]
 
     def update(self, actions, board, layers, backdrop, things, the_plot):
         del layers, backdrop, things   # Unused.

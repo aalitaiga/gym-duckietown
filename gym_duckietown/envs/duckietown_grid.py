@@ -58,7 +58,7 @@ class DuckietownGrid(gym.Env):
             sprites={'P': PlayerSprite}
         )
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=0, high=size-1, shape=2)
+        self.observation_space = spaces.MultiBinary(3)
 
     def _step(self, action):
         # Use the sprite position insteas of the whole board as an observation

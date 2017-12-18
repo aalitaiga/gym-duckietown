@@ -75,6 +75,10 @@ class DuckietownGrid(gym.Env):
             sprites={'P': PlayerSprite}
         )
         observation, reward, _ = self.game.its_showtime()
+        #print('******observation************observation******************')
+        #print(observation)
+        #print('REWARD_REWARD_REEWARD_REWARD_REWARD_REWARD_REWARD_REWARD')
+        #print(reward)
         sprite_position = self.game._sprites_and_drapes['P'].virtual_position
 
         return np.array(sprite_position)
@@ -122,7 +126,10 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         before = self.memory[u, v].sum()
         self.memory[u, v] = 1
         after = self.memory[u, v].sum()
-        the_plot.add_reward((after - before)/(3*5))
+        #the_plot.add_reward((after - before)/(3*5))
+        the_plot.add_reward(after-before)
+        #print('****memory**************memory************memory***********memory********')
+        #print(self.memory)
 
     def update(self, actions, board, layers, backdrop, things, the_plot):
         del layers, backdrop, things   # Unused.
@@ -135,10 +142,10 @@ class PlayerSprite(prefab_sprites.MazeWalker):
                 out = self._north(board, the_plot)
             elif self.orientation == self._SOUTH:
                 out = self._south(board, the_plot)
-            elif self.orientation == self._EAST:  # walk downward?
-                out = self._east(board, the_plot)
-            elif self.orientation == self._WEST:  # walk leftward?
+            elif self.orientation == self._WEST:  # walk downward?
                 out = self._west(board, the_plot)
+            elif self.orientation == self._EAST:  # walk leftward?
+                out = self._east(board, the_plot)
 
             if out is not None:
                 the_plot.add_reward(-0.96)

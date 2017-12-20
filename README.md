@@ -5,7 +5,8 @@ because grid world should also duckies
 
 #### Installation:
 
-on the shell:
+Install [pycolab](https://github.com/deepmind/pycolab) first
+Then:
 
     git clone https://github.com/aalitaiga/gym-duckietown.git
     cd gym-duckitown

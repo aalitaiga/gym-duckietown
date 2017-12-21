@@ -25,6 +25,22 @@ action_orientation = {
     3: prefab_sprites.MazeWalker._EAST,
 }
 
+turn_left = {
+    prefab_sprites.MazeWalker._NORTH:  prefab_sprites.MazeWalker._WEST,
+    prefab_sprites.MazeWalker._WEST: prefab_sprites.MazeWalker._SOUTH,
+    prefab_sprites.MazeWalker._SOUTH: prefab_sprites.MazeWalker._EAST,
+    prefab_sprites.MazeWalker._EAST: prefab_sprites.MazeWalker._NORTH
+}
+
+turn_right = {
+    prefab_sprites.MazeWalker._NORTH:  prefab_sprites.MazeWalker._EAST,
+    prefab_sprites.MazeWalker._EAST: prefab_sprites.MazeWalker._SOUTH,
+    prefab_sprites.MazeWalker._SOUTH: prefab_sprites.MazeWalker._WEST,
+    prefab_sprites.MazeWalker._WEST: prefab_sprites.MazeWalker._NORTH
+}
+
+# prefab_sprites.MazeWalker._STAY: 4,
+
 GAME_ART = ['#############',
             '#     #     #',
             '#     #     #',
@@ -127,8 +143,8 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         before = self.memory[u, v].sum()
         self.memory[u, v] = 1
         after = self.memory[u, v].sum()
-        #the_plot.add_reward((after - before)/(3*5))
-        the_plot.add_reward(after-before)
+        the_plot.add_reward((after - before)/3)
+        # the_plot.add_reward(after-before)
 
     def get_observation(self):
         window = np.multiply.outer(self.orientation[::-1], self.mask).T + self.position + self.orientation
@@ -139,18 +155,31 @@ class PlayerSprite(prefab_sprites.MazeWalker):
         del layers, backdrop, things   # Unused.
 
         # Apply motion commands.
-        if actions is not None and actions < 4 and self.orientation != action_orientation[actions]:
-            self.orientation = action_orientation[actions]      
-        elif actions == 0:
-            out = self._north(board, the_plot)
+        if actions == 0:
+            # Move forward
+            if self.orientation == self._NORTH:
+                out = self._north(board, the_plot)
+            elif self.orientation == self._SOUTH:
+                out = self._south(board, the_plot)
+            elif self.orientation == self._WEST:
+                out = self._west(board, the_plot)
+            elif self.orientation == self._EAST:
+                out = self._east(board, the_plot)
         elif actions == 1:
-            out = self._south(board, the_plot)
+            # turn left
+            self.orientation = turn_left[self.orientation]
+            out = None
         elif actions == 2:
-            out = self._west(board, the_plot)
+            # turn right
+            self.orientation = turn_right[self.orientation]
+            out = None
         elif actions == 3:
-            out = self._east(board, the_plot)
+            # stay and do nothing
+            out = None
+        else:
+            out = None
 
-            if out is not None:
+        if out is not None:
                 the_plot.add_reward(-0.96)
 
         # Penalty for each step taken
